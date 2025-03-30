@@ -1,3 +1,5 @@
+-- This will go in the Buy Button for the Template
+
 --// Services
 local Players = game:GetService("Players")
 local Marketplace = game:GetService("MarketplaceService")
