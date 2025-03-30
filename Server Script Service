@@ -1,0 +1,70 @@
+--// Get Services
+local HttpService = game:GetService("HttpService")
+local Marketplace = game:GetService("MarketplaceService")
+
+--// Create a var for Universe Id
+local UniverseId
+
+local function RetrieveGamepasses(Player)
+	--// Create a PCall so we can attempt to get the gamepasses for this Universe
+	local Success, Error = pcall(function()
+		Result = HttpService:GetAsync("https://games.roproxy.com/v1/games/"..UniverseId.."/game-passes?limit=100&sortOrder=Asc")
+	end)
+	
+	if Success then
+		--// If success we'll decode the result and get the data section from the table
+		local Decoded = HttpService:JSONDecode(Result)
+		local Data = Decoded["data"]
+		
+		--// Create a for loop for the data
+		for i = 1, #Data do
+			--// Get product info for the iD in the data
+			local AdditionalInformation = Marketplace:GetProductInfo(Data[i]["id"], Enum.InfoType.GamePass)
+			
+			--// Check if the gamepass is for sale
+			if AdditionalInformation["IsForSale"] == true then
+				--// If it is we'll fill out the table
+				local Template = script.Frame:Clone()
+				
+				Template.Image.Image = "rbxassetid://"..AdditionalInformation["IconImageAssetId"]
+				Template.Price.Text = AdditionalInformation.PriceInRobux
+				Template.BuyButton.GamepassId.Value = Data[i]["id"]
+				
+				--// If they own it already, we won't set up the buy feature
+				if Marketplace:UserOwnsGamePassAsync(Player.UserId, Data[i]["id"]) then
+					Template.BuyButton.Text = "Owned!"
+					Template.BuyButton.GamepassId:Destroy()
+				else
+					--// If they don't, we will set up the buy feature
+					Template.BuyButton.Text = "Buy "..Data[i]["name"].."?"
+				end
+				
+				--// Set the parent
+				Template.Parent = Player.PlayerGui.Shop.Frame.ScrollingFrame
+			end
+		end
+	else
+		warn(Error)
+	end
+end
+
+--// Attempt to retrieve Universe Id
+local function RetrieveUniverseId(Player)
+	--// Create a PCall to get the Id
+	local Success, Error = pcall(function()
+		Result = HttpService:GetAsync("https://apis.roproxy.com/universes/v1/places/"..game.PlaceId.."/universe")
+	end)
+	
+	if Success then
+		--// If success we'll set the UniverseId Variable to the Id
+		UniverseId = HttpService:JSONDecode(Result)["universeId"]
+		--// We'll also call the Gamepass function so it can proceed
+		RetrieveGamepasses(Player)
+	else
+		warn(Error)
+	end
+end
+
+game:GetService("Players").PlayerAdded:Connect(function(Player)
+	RetrieveUniverseId(Player)
+end)
