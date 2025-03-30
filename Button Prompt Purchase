@@ -1,0 +1,11 @@
+-- In your "BuyButton" create a local script with the code below.
+
+--// Services
+local Players = game:GetService("Players")
+local Marketplace = game:GetService("MarketplaceService")
+
+--// Check when button is clicked
+script.MouseButton1Click:Connect(function()
+	--// Prompt Purchase
+	Marketplace:PromptPurchase(Players.LocalPlayer, script.GamepassId.Value)
+end)
