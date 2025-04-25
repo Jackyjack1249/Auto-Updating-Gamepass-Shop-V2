@@ -1,3 +1,7 @@
+if script:FindFirstChild("Shop") then
+	script.Shop.Parent = game:GetService("StarterGui")
+end
+
 --// Get Services
 local HttpService = game:GetService("HttpService")
 local Marketplace = game:GetService("MarketplaceService")
@@ -5,10 +9,14 @@ local Marketplace = game:GetService("MarketplaceService")
 --// Create a var for Universe Id
 local UniverseId
 
+--// My Api's
+local GamepassApi = "https://games.roproxy.com/v1/games/%o/game-passes?limit=100&sortOrder=Asc"
+local UniverseIdApi = "https://apis.roproxy.com/universes/v1/places/"..game.PlaceId.."/universe"
+
 local function RetrieveGamepasses(Player)
 	--// Create a PCall so we can attempt to get the gamepasses for this Universe
 	local Success, Error = pcall(function()
-		Result = HttpService:GetAsync("https://games.roproxy.com/v1/games/"..UniverseId.."/game-passes?limit=100&sortOrder=Asc")
+		Result = HttpService:GetAsync(string.format(GamepassApi, UniverseId))
 	end)
 	
 	if Success then
@@ -44,7 +52,11 @@ local function RetrieveGamepasses(Player)
 			end
 		end
 	else
-		warn(Error)
+		if Error == "HTTP 404 (Not Found)" then
+			warn("No Gamepasses Found")
+		else
+			warn(Error)
+		end
 	end
 end
 
@@ -52,7 +64,7 @@ end
 local function RetrieveUniverseId(Player)
 	--// Create a PCall to get the Id
 	local Success, Error = pcall(function()
-		Result = HttpService:GetAsync("https://apis.roproxy.com/universes/v1/places/"..game.PlaceId.."/universe")
+		Result = HttpService:GetAsync(UniverseIdApi)
 	end)
 	
 	if Success then
